@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#100d08" />
+  <meta name="description" content="Indiana Jones: The Lost Relics — a 3D jungle-temple action adventure for desktop and touch." />
+  <title>Indiana Jones: The Lost Relics</title>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Game view"></canvas>
+    <div id="cinematic-bars"><span></span><span></span></div>
+    <div id="vignette"></div>
+    <div id="grain"></div>
+    <div id="damage-flash"></div>
+    <div id="fade"></div>
+
+    <main id="hud" class="hud hidden" aria-live="polite">
+      <section class="hud-top">
+        <div class="level-plate">
+          <span class="eyebrow">EXPEDITION</span>
+          <strong id="hud-level">01</strong>
+          <span id="hud-biome">JUNGLE</span>
+        </div>
+
+        <div class="hearts-block">
+          <div id="hearts" class="hearts" aria-label="Health"></div>
+          <span id="hud-score" class="score">0</span>
+        </div>
+
+        <div class="objective-card">
+          <span class="eyebrow" id="hud-objective-label">CURRENT OBJECTIVE</span>
+          <div id="hud-objective">Recover the Sun Serpent</div>
+          <div class="objective-route"><i></i><span id="hud-distance">148 m</span></div>
+        </div>
+
+        <div class="resources">
+          <div class="resource" title="Golden idols">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c2.4 1.8 3.5 4 3.1 6.7-.2 1.3-.8 2.4-1.8 3.3h3.9l2.3 5.1-1.7 7.8H10.2l-1.7-7.8L10.8 13h3.9a5.9 5.9 0 0 1-1.8-3.3C12.5 7 13.6 4.8 16 3Z"/><path class="cut" d="M12 19h8l-1 5h-6l-1-5Z"/></svg>
+            <span id="hud-idols">0 / 2</span>
+          </div>
+          <div class="resource ammo" title="Revolver rounds">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 12h14l-1.2 10H10.2L9 12Zm3-4h8l1 4H11l1-4Z"/><circle cx="16" cy="17" r="2.1" class="cut"/></svg>
+            <span id="hud-ammo">6</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="compass-wrap" aria-hidden="true">
+        <div class="compass-ring">
+          <div id="compass-arrow" class="compass-arrow"></div>
+          <div class="compass-center"></div>
+          <span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">W</span>
+        </div>
+        <div class="compass-caption"><span id="compass-label">RELIC</span><b id="compass-dist">148m</b></div>
+      </div>
+
+      <div id="route-strip" class="route-strip" aria-hidden="true">
+        <div class="route-line"></div>
+        <div id="route-player" class="route-player"></div>
+        <div id="route-relic" class="route-relic"></div>
+        <div id="route-secrets" class="route-secrets"></div>
+      </div>
+
+      <div id="boss-bar" class="boss-bar hidden">
+        <div class="boss-heading"><span>GUARDIAN OF THE SUN</span><b id="boss-hp-label">100%</b></div>
+        <div class="boss-track"><i id="boss-hp"></i></div>
+      </div>
+
+      <div id="interact-prompt" class="interact-prompt hidden"><kbd>E</kbd><span id="interact-text">Use lever</span></div>
+      <div id="toast-stack" class="toast-stack"></div>
+      <div id="hint-card" class="hint-card hidden"></div>
+
+      <div id="desktop-hints" class="desktop-hints">
+        <span><kbd>WASD</kbd> MOVE</span><span><kbd>SHIFT</kbd> SPRINT</span><span><kbd>SPACE</kbd> JUMP</span>
+        <span><kbd>F</kbd> WHIP</span><span><kbd>J</kbd> PUNCH</span><span><kbd>K</kbd> SHOOT</span><span><kbd>E</kbd> USE</span><span><kbd>ESC</kbd> PAUSE</span>
+      </div>
+
+      <button id="pause-button" class="icon-button pause-button" aria-label="Pause"><span></span><span></span></button>
+    </main>
+
+    <section id="touch-ui" class="touch-ui hidden" aria-label="Touch controls">
+      <div id="joystick" class="joystick"><div class="joystick-ring"></div><div id="joystick-knob" class="joystick-knob"></div></div>
+      <div class="touch-look-hint">DRAG TO LOOK</div>
+      <div class="action-cluster">
+        <button class="touch-btn small interact" data-action="interact" aria-label="Interact"><span class="glyph">✦</span><small>USE</small></button>
+        <button class="touch-btn small crouch" data-action="crouch" aria-label="Crouch"><span class="glyph">▼</span><small>CROUCH</small></button>
+        <button class="touch-btn medium shoot" data-action="shoot" aria-label="Shoot"><span class="glyph">◎</span><small>SHOOT</small></button>
+        <button class="touch-btn medium punch" data-action="punch" aria-label="Punch"><span class="glyph">✊</span><small>PUNCH</small></button>
+        <button class="touch-btn medium whip" data-action="whip" aria-label="Whip"><span class="glyph">⌁</span><small>WHIP</small></button>
+        <button class="touch-btn jump" data-action="jump" aria-label="Jump"><span class="glyph">↑</span><small>JUMP</small></button>
+      </div>
+    </section>
+
+    <section id="menu" class="screen menu-screen">
+      <div class="menu-scrim"></div>
+      <div class="menu-topline">
+        <span class="brand-mark">IJ</span>
+        <span class="edition">A LOST WORLD EXPEDITION</span>
+        <div class="menu-sound">
+          <button id="sound-toggle" class="icon-button sound-toggle" aria-label="Toggle sound"><span class="sound-on">◖))</span><span class="sound-off">◖×</span></button>
+        </div>
+      </div>
+
+      <div class="menu-content">
+        <div class="title-lockup">
+          <div class="kicker"><i></i><span>THE ADVENTURE SERIES</span><i></i></div>
+          <h1><span>INDIANA</span><span class="title-jones">JONES</span></h1>
+          <div class="subtitle"><span>AND THE</span><strong>LOST RELICS</strong></div>
+          <p class="tagline">Twenty temples. One legendary explorer.<br/>Fortune favors the bold.</p>
+        </div>
+
+        <div class="menu-actions">
+          <button id="play-button" class="menu-button primary" aria-label="Play">PLAY<span class="button-shine"></span></button>
+          <button id="levels-button" class="menu-button">EXPEDITION MAP</button>
+          <div class="menu-meta">
+            <span>CHAPTER <b id="menu-level">01</b></span><span id="menu-progress">0 / 20 RELICS</span>
+          </div>
+        </div>
+
+        <div class="feature-row">
+          <div class="feature"><span class="feature-icon">⌁</span><b>WHIP SWING</b><small>Grapple ancient rings</small></div>
+          <div class="feature"><span class="feature-icon">◈</span><b>HIDDEN RELICS</b><small>Two secrets per temple</small></div>
+          <div class="feature"><span class="feature-icon">☠</span><b>DEADLY TRAPS</b><small>Survive the ruins</small></div>
+        </div>
+      </div>
+
+      <div class="menu-footer">
+        <span>DESKTOP + TOUCH</span>
+        <span class="footer-diamond">◆</span>
+        <span>HEADPHONES RECOMMENDED</span>
+        <span class="version">BUILD 1.0</span>
+      </div>
+      <div class="corner corner-tl"></div><div class="corner corner-tr"></div><div class="corner corner-bl"></div><div class="corner corner-br"></div>
+    </section>
+
+    <section id="level-select" class="screen panel-screen hidden">
+      <div class="panel-backdrop"></div>
+      <div class="panel">
+        <header class="panel-header">
+          <button id="close-levels" class="text-button">← BACK</button>
+          <div><span class="eyebrow">CHOOSE YOUR DESCENT</span><h2>Expedition Map</h2></div>
+          <div class="relic-total"><span>RELICS</span><b id="total-relics">0 / 20</b></div>
+        </header>
+        <div id="level-grid" class="level-grid"></div>
+      </div>
+    </section>
+
+    <section id="pause" class="screen modal-screen hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card">
+        <span class="eyebrow">EXPEDITION PAUSED</span>
+        <h2>Take a breath, Indy.</h2>
+        <p>The temple is not going anywhere.</p>
+        <div class="modal-actions">
+          <button id="resume-button" class="menu-button primary small">RESUME</button>
+          <button id="restart-button" class="menu-button small">RESTART LEVEL</button>
+          <button id="pause-map-button" class="menu-button small">EXPEDITION MAP</button>
+          <button id="quit-button" class="menu-button small ghost">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="level-complete" class="screen modal-screen hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card complete-card">
+        <span class="eyebrow">RELIC RECOVERED</span>
+        <h2 id="complete-title">The Sun Serpent</h2>
+        <p id="complete-biome">JUNGLE · CHAPTER 01</p>
+        <div class="relic-emblem"><span></span><i></i><span></span></div>
+        <div class="stats-row">
+          <div><span>TIME</span><b id="stat-time">00:00</b></div>
+          <div><span>IDOLS</span><b id="stat-idols">2 / 2</b></div>
+          <div><span>SCORE</span><b id="stat-score">0</b></div>
+        </div>
+        <div class="modal-actions horizontal">
+          <button id="next-button" class="menu-button primary small">NEXT TEMPLE</button>
+          <button id="replay-button" class="menu-button small">REPLAY</button>
+          <button id="complete-map-button" class="menu-button small ghost">MAP</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="ending" class="screen modal-screen hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-card ending-card">
+        <span class="eyebrow">THE LOST CITY YIELDS</span>
+        <h2>The Legend Lives On</h2>
+        <p>You have recovered the Sun Disc and escaped the collapsing temple.<br/>Twenty relics. One immortal adventure.</p>
+        <div class="ending-stats"><span>FINAL SCORE</span><b id="ending-score">0</b></div>
+        <div class="modal-actions horizontal">
+          <button id="ending-continue" class="menu-button primary small">CONTINUE EXPLORING</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="rotate-prompt" class="rotate-prompt hidden">
+      <span>↻</span><p>Turn your device for a wider adventure</p>
+    </section>
+
+    <div id="loading" class="loading">
+      <div class="loading-mark">IJ</div>
+      <div class="loading-track"><i id="loading-bar"></i></div>
+      <span id="loading-text">DUSTING OFF THE FEDORA…</span>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
